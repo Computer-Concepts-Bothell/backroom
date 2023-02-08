@@ -3,9 +3,9 @@
 
 try {
     #Current Version. Make sure to update before pushing.
-    $Version = "1.0.0"
+    $Version = "1.0.1"
     $headers = @{ "Cache-Control" = "no-cache" }
-    $remoteScript = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1?token=GHSAT0AAAAAAB5T2NYQPR2PCI5U3ENRUDDAY7C7QAA" -Headers $headers -UseBasicParsing).Content
+    $remoteScript = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1" -Headers $headers -UseBasicParsing).Content
     $RemoteVersion = ($remoteScript -split '\$version = "')[1].split('"')[0]
     #if the versions between local and github dont match. it will prompt for update and backup.
     if($Version -ne $RemoteVersion){
@@ -18,7 +18,7 @@ try {
         }
         if ($UpdateRequest -eq "y") {
             # download the new version if the version is different
-            (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1?token=GHSAT0AAAAAAB5T2NYQPR2PCI5U3ENRUDDAY7C7QAA" -UseBasicParsing).Content | Out-File .\1-inventory.ps1
+            (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1" -UseBasicParsing).Content | Out-File .\1-inventory.ps1
             Write-Output "Please Close this script and open the updated version"
             Read-Host -Prompt "Press any key to reload the script"
             . .\backroom.ps1
