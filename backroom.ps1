@@ -3,7 +3,7 @@
 
 try {
     #Current Version. Make sure to update before pushing.
-    $Version = "1.1.0"
+    $Version = "1.1.1"
     $headers = @{ "Cache-Control" = "no-cache" }
     $remoteScript = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1" -Headers $headers -UseBasicParsing).Content
     $RemoteVersion = ($remoteScript -split '\$version = "')[1].split('"')[0]
@@ -143,10 +143,13 @@ do {
             Write-Output "Ticket Power Supply: $TranslatedPower"
             $Power = $Properties."Power Supply"
             if ($Power -notin $IgnoredPower) {
-                $voice.speak("Make Sure $TranslatedPower is with $TicketNum") |Out-Null
+                $voice.speak("Make Sure $TranslatedPower is with the Ticket, Then Scan Location") |Out-Null
+            } else {
+                $voice.speak("Scan the Location") |Out-Null
             }
             Write-Output $Spacer
             #if the devices is serialized it runs that as a API request then outputs the S/Ns 
+            
             $NewLocation = Read-Host "Please Scan New location or cancel"
             Write-Output $Spacer
             $Properties.Location = $NewLocation
