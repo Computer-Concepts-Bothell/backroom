@@ -3,7 +3,7 @@
 
 try {
     #Current Version. Make sure to update before pushing.
-    $Version = "1.0.1"
+    $Version = "1.1.0"
     $headers = @{ "Cache-Control" = "no-cache" }
     $remoteScript = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1" -Headers $headers -UseBasicParsing).Content
     $RemoteVersion = ($remoteScript -split '\$version = "')[1].split('"')[0]
@@ -101,10 +101,12 @@ $ELogs = [Ordered]@{
 
 # Create a new SpVoice objects
 Add-Type -AssemblyName System.speech
-$voice = New-Object -ComObject Sapi.spvoice
+
+$voice = New-Object System.Speech.Synthesis.SpeechSynthesizer
 
 # Set the speed - positive numbers are faster, negative numbers, slower
 $voice.rate = 0
+$voice.SelectVoice("Microsoft Zira Desktop")
 
 
 
