@@ -1,24 +1,27 @@
 #Feb2023 -- Dakotam@conceptsnet.com
 #Auto Updater Script
-
 try {
     #Current Version. Make sure to update before pushing.
-    $Version = "1.1.1"
+    $Version = "1.1.3"
     $headers = @{ "Cache-Control" = "no-cache" }
     $remoteScript = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1" -Headers $headers -UseBasicParsing).Content
     $RemoteVersion = ($remoteScript -split '\$version = "')[1].split('"')[0]
     #if the versions between local and github dont match. it will prompt for update and backup.
-    if($Version -ne $RemoteVersion){
-        $UpdateRequest = Read-Host "Current Version $Version is out date! Would you like to update to $RemoteVersion ? y/n"
-        $BackupRequest = Read-Host "Would you like to backup the current script? y/n"
+    if($Version -lt $RemoteVersion){
+        $UpdateFound = Read-Host "Current Version $Version is out date! Would you like to update to $RemoteVersion ? y/n"
+        
+        if ($UpdateFound -eq "y") {
+            $BackupRequest = Read-Host "Would you like to backup the current script? y/n"
+            $UpdateRequest = "y"
+        }
         if ($BackupRequest -eq "y") {
             #renames the current script file to 
-            Rename-Item -Path .\backroom.ps1 -NewName "1-inventory-$Version-backup.ps1" -Force
+            Rename-Item -Path .\backroom.ps1 -NewName "backroom-$Version-backup.ps1" -Force
             Write-Output "The Current Script has been renamed to 'backroom-$Version-backup.ps1'"
         }
         if ($UpdateRequest -eq "y") {
             # download the new version if the version is different
-            (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1" -UseBasicParsing).Content | Out-File .\1-inventory.ps1
+            (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1" -UseBasicParsing).Content | Out-File .\backroom.ps1
             Write-Output "Please Close this script and open the updated version"
             Read-Host -Prompt "Press any key to reload the script"
             . .\backroom.ps1
@@ -26,6 +29,9 @@ try {
     }
     if ($Version -eq $RemoteVersion) {
         Write-Output "Current Version:$Version. is up to date!"
+    }
+    if ($Version -gt $RemoteVersion) {
+        Write-Output "Current Version:$Version. must be a dev build"
     }
 }
 catch {
@@ -61,6 +67,7 @@ try {
     Write-Output $Spacer
     Write-Output "the creation of this file must be done by you atm tool is not made to add this part... yet?"
     Write-Output "Please Create this XML file with the correct formating"
+    Write-Output $Spacer
 }
 #These Vars setup the whole Script Please don't edit
 $APIKey = $CFiles.APIKey
@@ -144,12 +151,14 @@ do {
             $Power = $Properties."Power Supply"
             if ($Power -notin $IgnoredPower) {
                 $voice.speak("Make Sure $TranslatedPower is with the Ticket, Then Scan Location") |Out-Null
-            } else {
+            }
+            if ($Power -eq "131444") {
+                $voice.speak("Powersupply is labeled not here yet, fix this, then Scan Location") |Out-Null
+            } 
+            if ($Power -in $IgnoredPower){
                 $voice.speak("Scan the Location") |Out-Null
             }
             Write-Output $Spacer
-            #if the devices is serialized it runs that as a API request then outputs the S/Ns 
-            
             $NewLocation = Read-Host "Please Scan New location or cancel"
             Write-Output $Spacer
             $Properties.Location = $NewLocation
@@ -186,7 +195,12 @@ do {
             Write-Host "Ticket not found"
             Write-Output $Spacer
         }
-        
+        #had issues with wifi sometimes on our "location" device. in order to resolve that issue and it using the last scanned ticket not the new scanned ticket. 
+        $Properties = ""
+        $TicketCustomer = ""
+        $TicketID = ""
+        $TicketStatus = ""
+        $TicketNum = ""
         
     }
 
@@ -251,19 +265,21 @@ if ($Continue -eq "cmds"){
     Write-Output $Spacer
 }
 #>
-if ($Continue -eq "r"){
-    $RConfirm = Read-Host "Are you sure you would like to reload? Y/N"
-    Write-Output $Spacer
-    if ($Rconfirm -eq "y") {
-        #Start-Process powershell -ArgumentList "-File `".\backroom.ps1`"" -NoNewWindow
-        #Write-Output $Spacer
-        . .\backroom.ps1
-        #Exit
-    }
-}   
-if ($Continue -eq "credits"){
-    Write-Output "This Tool is a open source Powershell tool created by Dakota @ pixelbays on github. If you have any problems or issues make and issue on github."
-}   
+    if ($Continue -eq "r"){
+        $RConfirm = Read-Host "Are you sure you would like to reload? Y/N"
+        Write-Output $Spacer
+        if ($Rconfirm -eq "y") {
+            #Start-Process powershell -ArgumentList "-File `".\backroom.ps1`"" -NoNewWindow
+            Write-Output $Spacer
+            Write-Output $Spacer
+            Write-Output $Spacer
+            . .\backroom.ps1
+            #Exit
+        }
+    }   
+    if ($Continue -eq "credits"){
+        Write-Output "This Tool is a open source Powershell tool created by Dakota @ pixelbays on github. If you have any problems or issues make and issue on github."
+    }   
 
 
-}while ($Continue -ne "n")
+}while ($Continue -ne "n")        #Exit
