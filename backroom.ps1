@@ -2,7 +2,7 @@
 #Auto Updater Script
 try {
     #Current Version. Make sure to update before pushing.
-    $Version = "1.1.3"
+    $Version = "1.1.4"
     $headers = @{ "Cache-Control" = "no-cache" }
     $remoteScript = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1" -Headers $headers -UseBasicParsing).Content
     $RemoteVersion = ($remoteScript -split '\$version = "')[1].split('"')[0]
@@ -148,6 +148,9 @@ do {
             Write-Output "Ticket Location: $TranslatedLocation"
             $TranslatedPower = $LFiles[$Properties."Power Supply"]
             Write-Output "Ticket Power Supply: $TranslatedPower"
+            $charArray = $TicketNum.ToCharArray()
+            $SpacedTicket = $charArray -join " "
+            $voice.speak("Status is $TicketStatus") |Out-Null
             $Power = $Properties."Power Supply"
             if ($Power -notin $IgnoredPower) {
                 $voice.speak("Make Sure $TranslatedPower is with the Ticket, Then Scan Location") |Out-Null
