@@ -2,7 +2,7 @@
 #Auto Updater Script
 try {
     #Current Version. Make sure to update before pushing.
-    $Version = "1.2.0"
+    $Version = "1.2.1"
     $headers = @{ "Cache-Control" = "no-cache" }
     $remoteScript = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1" -Headers $headers -UseBasicParsing).Content
     $RemoteVersion = ($remoteScript -split '\$version = "')[1].split('"')[0]
