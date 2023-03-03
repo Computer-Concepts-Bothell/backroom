@@ -208,7 +208,10 @@ do {
         
     }
     catch {
-        $voice.speak("Something went wrong, check internet") |Out-Null
+        Write-Output $Spacer
+        Write-Output "Something went wrong, check internet connection"
+        $voice.speak("Something went wrong, check internet connection") |Out-Null
+        Write-Output $Spacer
     }
     }
     
