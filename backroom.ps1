@@ -2,7 +2,7 @@
 #Auto Updater Script
 try {
     #Current Version. Make sure to update before pushing.
-    $Version = "1.1.4"
+    $Version = "1.2.0"
     $headers = @{ "Cache-Control" = "no-cache" }
     $remoteScript = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1" -Headers $headers -UseBasicParsing).Content
     $RemoteVersion = ($remoteScript -split '\$version = "')[1].split('"')[0]
@@ -123,7 +123,8 @@ do {
     $CFiles = Import-Clixml -Path .\variables.xml
     $LFiles = Import-Clixml -Path .\translated.xml
     if ($Continue -notin $IgnoredInputs) {
-        #changes the Ticketnum var to the user input.
+        try {
+            #changes the Ticketnum var to the user input.
         $TicketNum = $Continue
         #requests the API for the Ticket using the given Ticket Number. If nothing is found with that Ticket Number, it will tell you. 
         $Request = Invoke-WebRequest -Uri "https://$SubDom.repairshopr.com/api/v1/tickets?number=$TicketNum" -ContentType $contenttype -Headers $postheaders
@@ -149,7 +150,6 @@ do {
             $TranslatedPower = $LFiles[$Properties."Power Supply"]
             Write-Output "Ticket Power Supply: $TranslatedPower"
             $charArray = $TicketNum.ToCharArray()
-            $SpacedTicket = $charArray -join " "
             $voice.speak("Status is $TicketStatus") |Out-Null
             $Power = $Properties."Power Supply"
             if ($Power -notin $IgnoredPower) {
@@ -196,6 +196,7 @@ do {
         }elseif ($Response.tickets.Count -eq 0 -and $Continue -notin $IgnoredInputs) {
             Write-Output $Spacer
             Write-Host "Ticket not found"
+            $voice.speak("Ticket not found") |Out-Null
             Write-Output $Spacer
         }
         #had issues with wifi sometimes on our "location" device. in order to resolve that issue and it using the last scanned ticket not the new scanned ticket. 
@@ -206,6 +207,12 @@ do {
         $TicketNum = ""
         
     }
+    catch {
+        $voice.speak("Something went wrong, check internet") |Out-Null
+    }
+    }
+    
+        
 
 <#
  if ($Continue -eq "c"){
