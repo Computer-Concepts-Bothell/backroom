@@ -1,40 +1,47 @@
 #Feb2023 -- Dakotam@conceptsnet.com
 #Auto Updater Script
+#remotescript is linked to the github i use for this tool, if you are using a different branch or git, update this to yours. 
+$ToolLink = "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1"
+#this is 'tool' name. mostly used in changing the file name in the update part
+$ToolName = "1-Backroom"
+#Auto Updater Script
 try {
     #Current Version. Make sure to update before pushing.
-    $Version = "1.2.1"
-    $headers = @{ "Cache-Control" = "no-cache" }
-    $remoteScript = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1" -Headers $headers -UseBasicParsing).Content
-    $RemoteVersion = ($remoteScript -split '\$version = "')[1].split('"')[0]
+    $Version = "1.3"
+    $headers = @{ "Cache-Control" = "no-cache" }   
+    $RemoteScript = (Invoke-WebRequest -Uri $ToolLink -Headers $headers -UseBasicParsing).Content
+    $RemoteVersion = ($RemoteScript -split '\$version = "')[1].split('"')[0]
     #if the versions between local and github dont match. it will prompt for update and backup.
+    #should be most self explaintory here
     if($Version -lt $RemoteVersion){
         $UpdateFound = Read-Host "Current Version $Version is out date! Would you like to update to $RemoteVersion ? y/n"
-        
         if ($UpdateFound -eq "y") {
+            #found that just having the script back itself up can be usefull. 
             $BackupRequest = Read-Host "Would you like to backup the current script? y/n"
             $UpdateRequest = "y"
         }
         if ($BackupRequest -eq "y") {
-            #renames the current script file to 
-            Rename-Item -Path .\backroom.ps1 -NewName "backroom-$Version-backup.ps1" -Force
-            Write-Output "The Current Script has been renamed to 'backroom-$Version-backup.ps1'"
+            #renames the current script file to the tool back with version number
+            Rename-Item -Path .\$ToolName.ps1 -NewName "$ToolName-$Version-backup.ps1" -Force
+            Write-Output "The Current Script has been renamed to '$ToolName-$Version-backup.ps1'"
         }
         if ($UpdateRequest -eq "y") {
             # download the new version if the version is different
-            (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1" -UseBasicParsing).Content | Out-File .\backroom.ps1
+            (Invoke-WebRequest -Uri $ToolLink -UseBasicParsing).Content | Out-File .\$toolname.ps1
             Write-Output "Please Close this script and open the updated version"
             Read-Host -Prompt "Press any key to reload the script"
-            . .\backroom.ps1
+            . .\$ToolName.ps1
         }
     }
     if ($Version -eq $RemoteVersion) {
         Write-Output "Current Version:$Version. is up to date!"
     }
     if ($Version -gt $RemoteVersion) {
-        Write-Output "Current Version:$Version. must be a dev build"
+        Write-Output "Current Version:$Version. must be a dev build, prod build is $RemoteVersion"
     }
 }
 catch {
+    #if github was not reachable either due to internet or user error will fail. 
     Write-Output "Unable to check for update. Current Version:$Version"
 }
 
