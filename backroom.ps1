@@ -7,7 +7,7 @@ $ToolName = "1-Backroom"
 #Auto Updater Script
 try {
     #Current Version. Make sure to update before pushing.
-    $Version = "1.4"
+    $Version = "1.4.1"
     $headers = @{ "Cache-Control" = "no-cache" }   
     $RemoteScript = (Invoke-WebRequest -Uri $ToolLink -Headers $headers -UseBasicParsing).Content
     $RemoteVersion = ($RemoteScript -split '\$version = "')[1].split('"')[0]
@@ -89,7 +89,13 @@ $contenttype = "application/json"
 #This Var is to use for the if statments to ignore when a cmd has been typed
 $IgnoredInputs = "n", "c", "s", "o", "help", "export", "r"
 $IgnoredPower = "131444", "131448", "131449", "149103", ""
-$ChangeStatus = "New", "Need to order parts", "Waiting on Customer", "Waiting for Parts", "Unable to Contact"
+$ChangeStatusTrans = @{
+"101" = "New"
+"206" = "Need to order parts"
+"418" = "Waiting on Customer"
+"404" = "Waiting for Parts"
+"444" = "Unable to Contact"
+}
 #format spacer reused so i dont have to copy and paste the same bit or count. Lazness pays off now. 
 $Spacer = "_______________"
 #This var is for the product IDs to get saved when needed.
@@ -195,16 +201,18 @@ do {
                     # Say something
                     $voice.speak("Location Updated to $NewTranslate") |Out-Null
                 }
-            }if ($NewLocation -in $ChangeStatus ) {
+            }if ($ChangeStatusTrans.ContainsKey($NewLocation)) {
                 #converts back to json then pushes that date change to the API using the sort order field
-                $Body = @{"status" = "$NewLocation"}
+                $Statustranslated = $ChangeStatusTrans.$NewLocation
+                $Body = @{"status" = "$Statustranslated"}
                 $jsonBody = $body | ConvertTo-Json
                 Invoke-RestMethod -Method PUT -Uri "https://$SubDom.repairshopr.com/api/v1/tickets/$TicketID" -ContentType $contenttype -Headers $postheaders -Body $jsonBody | Out-Null
-                Write-Output "Ticket Has been Moved To Status $NewLocation"
+                Write-Output "Ticket Has been Moved To Status $Statustranslated"
                 Write-Output $Spacer
                 # Say something
-                $voice.speak("Status Updated to $NewLocation") |Out-Null
+                $voice.speak("Status Updated to $Statustranslated") |Out-Null
             }
+            
             
             else {
                 Write-Output "Location not found!"
