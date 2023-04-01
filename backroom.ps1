@@ -7,7 +7,7 @@ $ToolName = "1-Backroom"
 #Auto Updater Script
 try {
     #Current Version. Make sure to update before pushing.
-    $Version = "1.3"
+    $Version = "1.4"
     $headers = @{ "Cache-Control" = "no-cache" }   
     $RemoteScript = (Invoke-WebRequest -Uri $ToolLink -Headers $headers -UseBasicParsing).Content
     $RemoteVersion = ($RemoteScript -split '\$version = "')[1].split('"')[0]
@@ -87,8 +87,9 @@ $postheaders = @{Authorization = "Bearer $APIKey"
 "Accept" = "application/json"}
 $contenttype = "application/json"
 #This Var is to use for the if statments to ignore when a cmd has been typed
-$IgnoredInputs = "n", "c", "s", "o", "help", "export"
+$IgnoredInputs = "n", "c", "s", "o", "help", "export", "r"
 $IgnoredPower = "131444", "131448", "131449", "149103", ""
+$ChangeStatus = "New", "Need to order parts", "Waiting on Customer", "Waiting for Parts", "Unable to Contact"
 #format spacer reused so i dont have to copy and paste the same bit or count. Lazness pays off now. 
 $Spacer = "_______________"
 #This var is for the product IDs to get saved when needed.
@@ -119,7 +120,7 @@ Add-Type -AssemblyName System.speech
 $voice = New-Object System.Speech.Synthesis.SpeechSynthesizer
 
 # Set the speed - positive numbers are faster, negative numbers, slower
-$voice.rate = 0
+$voice.rate = 0.75
 $voice.SelectVoice("Microsoft Zira Desktop")
 
 
@@ -131,7 +132,7 @@ do {
     $LFiles = Import-Clixml -Path .\translated.xml
     if ($Continue -notin $IgnoredInputs) {
         try {
-            #changes the Ticketnum var to the user input.
+        #changes the Ticketnum var to the user input.
         $TicketNum = $Continue
         #requests the API for the Ticket using the given Ticket Number. If nothing is found with that Ticket Number, it will tell you. 
         $Request = Invoke-WebRequest -Uri "https://$SubDom.repairshopr.com/api/v1/tickets?number=$TicketNum" -ContentType $contenttype -Headers $postheaders
@@ -156,7 +157,6 @@ do {
             Write-Output "Ticket Location: $TranslatedLocation"
             $TranslatedPower = $LFiles[$Properties."Power Supply"]
             Write-Output "Ticket Power Supply: $TranslatedPower"
-            $charArray = $TicketNum.ToCharArray()
             $voice.speak("Status is $TicketStatus") |Out-Null
             $Power = $Properties."Power Supply"
             if ($Power -notin $IgnoredPower) {
@@ -195,8 +195,20 @@ do {
                     # Say something
                     $voice.speak("Location Updated to $NewTranslate") |Out-Null
                 }
-            }else {
+            }if ($NewLocation -in $ChangeStatus ) {
+                #converts back to json then pushes that date change to the API using the sort order field
+                $Body = @{"status" = "$NewLocation"}
+                $jsonBody = $body | ConvertTo-Json
+                Invoke-RestMethod -Method PUT -Uri "https://$SubDom.repairshopr.com/api/v1/tickets/$TicketID" -ContentType $contenttype -Headers $postheaders -Body $jsonBody | Out-Null
+                Write-Output "Ticket Has been Moved To Status $NewLocation"
+                Write-Output $Spacer
+                # Say something
+                $voice.speak("Status Updated to $NewLocation") |Out-Null
+            }
+            
+            else {
                 Write-Output "Location not found!"
+                Write-Output $Spacer
             }
 
             #this is were the ticket number fails at
@@ -286,6 +298,7 @@ if ($Continue -eq "cmds"){
 }
 #>
     if ($Continue -eq "r"){
+        Write-Output $Spacer
         $RConfirm = Read-Host "Are you sure you would like to reload? Y/N"
         Write-Output $Spacer
         if ($Rconfirm -eq "y") {
