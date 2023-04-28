@@ -7,7 +7,7 @@ $ToolName = "1-Backroom"
 #Auto Updater Script
 try {
     #Current Version. Make sure to update before pushing.
-    $Version = "1.4.2"
+    $Version = "1.4.3"
     $headers = @{ "Cache-Control" = "no-cache" }   
     $RemoteScript = (Invoke-WebRequest -Uri $ToolLink -Headers $headers -UseBasicParsing).Content
     $RemoteVersion = ($RemoteScript -split '\$version = "')[1].split('"')[0]
@@ -106,7 +106,7 @@ $TicketNum = ""
 #this is a var to check if the user has selected that repair shopr has been opened and logged into. 
 #$Signedin = ""
 #the request user input saying so i dont have to copy and paste the same bit or count. Lazness pays off now.
-$CSay = "Type/Scan a Ticket Number"
+$CSay = "Then Scan Location or Status"
 #this is the var that is setup for logs, and finally some user input!
 <# 
 $ELogs = [Ordered]@{
@@ -167,13 +167,13 @@ do {
             $voice.speak("Status is $TicketStatus") |Out-Null
             $Power = $Properties."Power Supply"
             if ($Power -notin $IgnoredPower) {
-                $voice.speak("Make Sure $TranslatedPower is with the Ticket, Then Scan Location") |Out-Null
+                $voice.speak("Make Sure $TranslatedPower is with the Ticket, $CSay") |Out-Null
             }
             if ($Power -eq "131444") {
-                $voice.speak("Powersupply is labeled not here yet, fix this, then Scan Location") |Out-Null
+                $voice.speak("Powersupply is labeled not here yet, fix this, $CSay") |Out-Null
             } 
             if ($Power -in $IgnoredPower){
-                $voice.speak("Scan the Location") |Out-Null
+                $voice.speak("$CSay") |Out-Null
             }
             Write-Output $Spacer
             $NewLocation = Read-Host "Please Scan New location or cancel"
