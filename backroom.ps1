@@ -7,7 +7,7 @@ $ToolName = "1-Backroom"
 #Auto Updater Script
 try {
     #Current Version. Make sure to update before pushing.
-    $Version = "1.4.3"
+    $Version = "1.4.4"
     $headers = @{ "Cache-Control" = "no-cache" }   
     $RemoteScript = (Invoke-WebRequest -Uri $ToolLink -Headers $headers -UseBasicParsing).Content
     $RemoteVersion = ($RemoteScript -split '\$version = "')[1].split('"')[0]
@@ -106,7 +106,7 @@ $TicketNum = ""
 #this is a var to check if the user has selected that repair shopr has been opened and logged into. 
 #$Signedin = ""
 #the request user input saying so i dont have to copy and paste the same bit or count. Lazness pays off now.
-$CSay = "Then Scan Location or Status"
+$CSay = "Scan Location or Status"
 #this is the var that is setup for logs, and finally some user input!
 <# 
 $ELogs = [Ordered]@{
@@ -167,16 +167,16 @@ do {
             $voice.speak("Status is $TicketStatus") |Out-Null
             $Power = $Properties."Power Supply"
             if ($Power -notin $IgnoredPower) {
-                $voice.speak("Make Sure $TranslatedPower is with the Ticket, $CSay") |Out-Null
+                $voice.speak("Make Sure $TranslatedPower is with the Ticket, Then $CSay") |Out-Null
             }
             if ($Power -eq "131444") {
-                $voice.speak("Powersupply is labeled not here yet, fix this, $CSay") |Out-Null
+                $voice.speak("Powersupply is labeled not here yet, fix this, Then $CSay") |Out-Null
             } 
             if ($Power -in $IgnoredPower){
                 $voice.speak("$CSay") |Out-Null
             }
             Write-Output $Spacer
-            $NewLocation = Read-Host "Please Scan New location or cancel"
+            $NewLocation = Read-Host "Please $CSay"
             Write-Output $Spacer
             $Properties.Location = $NewLocation
             $NewTranslate = $LFiles[$Properties.Location]
@@ -189,7 +189,7 @@ do {
                     Invoke-RestMethod -Method PUT -Uri "https://$SubDom.repairshopr.com/api/v1/tickets/$TicketID" -ContentType $contenttype -Headers $postheaders -Body $jsonBody | Out-Null
                     Write-Output "Ticket Has been Moved To $NewTranslate and Has been removed from In Progress"
                     # Say something
-                    $voice.speak("Location Updated to $NewTranslate, Status Changed") |Out-Null
+                    $voice.speak("Location Updated to $NewTranslate, Status was changed") |Out-Null
                     Write-Output $Spacer
                 }
                 if ($TicketStatus -ne "In Progress") {
@@ -225,6 +225,8 @@ do {
             
             
             else {
+                $voice.speak("Location not found") |Out-Null
+                 Write-Output $Spacer
                 Write-Output "Location not found!"
                 Write-Output $Spacer
             }
