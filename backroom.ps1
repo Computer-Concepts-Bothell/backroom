@@ -7,7 +7,7 @@ $ToolName = "1-Backroom"
 #Auto Updater Script
 try {
     #Current Version. Make sure to update before pushing.
-    $Version = "1.4.4"
+    $Version = "1.4.5"
     $headers = @{ "Cache-Control" = "no-cache" }   
     $RemoteScript = (Invoke-WebRequest -Uri $ToolLink -Headers $headers -UseBasicParsing).Content
     $RemoteVersion = ($RemoteScript -split '\$version = "')[1].split('"')[0]
@@ -134,7 +134,7 @@ $voice.SelectVoice("Microsoft Zira Desktop")
 
 
 do {
-    $Continue = Read-Host -Prompt "$CSay"
+    $Continue = Read-Host -Prompt "Scan or Type Ticket Number"
     $CFiles = Import-Clixml -Path .\variables.xml
     $LFiles = Import-Clixml -Path .\translated.xml
     if ($Continue -notin $IgnoredInputs) {
@@ -165,6 +165,7 @@ do {
             $TranslatedPower = $LFiles[$Properties."Power Supply"]
             Write-Output "Ticket Power Supply: $TranslatedPower"
             $voice.speak("Status is $TicketStatus") |Out-Null
+            #Checks what the Powersupply status is and reads the correct response
             $Power = $Properties."Power Supply"
             if ($Power -notin $IgnoredPower) {
                 $voice.speak("Make Sure $TranslatedPower is with the Ticket, Then $CSay") |Out-Null
@@ -175,15 +176,19 @@ do {
             if ($Power -in $IgnoredPower){
                 $voice.speak("$CSay") |Out-Null
             }
+            #gets user input for the new status or location
             Write-Output $Spacer
             $NewLocation = Read-Host "Please $CSay"
             Write-Output $Spacer
             $Properties.Location = $NewLocation
             $NewTranslate = $LFiles[$Properties.Location]
+            #Checks if the user input is location status or not found
             if ($LFiles.ContainsKey($NewLocation)) {
                 Write-Output "This Location is Real!"
+                #checks if the ticket is left in progres or not. 
                 if ($TicketStatus -eq "In Progress") {
-                    #converts back to json then pushes that date change to the API using the sort order field
+                    #This block will push to API changing ticket to new and update the location
+                    #converts var back to json to push to API
                     $Body = @{"status" ="New"; "properties" = $Properties}
                     $jsonBody = $body | ConvertTo-Json
                     Invoke-RestMethod -Method PUT -Uri "https://$SubDom.repairshopr.com/api/v1/tickets/$TicketID" -ContentType $contenttype -Headers $postheaders -Body $jsonBody | Out-Null
@@ -193,7 +198,8 @@ do {
                     Write-Output $Spacer
                 }
                 if ($TicketStatus -ne "In Progress") {
-                    #converts back to json then pushes that date change to the API using the sort order field
+                    #This block will push to API changing ticket updating the location
+                    #converts var back to json to push to API
                     $Body = @{"properties" = $Properties}
                     $jsonBody = $body | ConvertTo-Json
                     Invoke-RestMethod -Method PUT -Uri "https://$SubDom.repairshopr.com/api/v1/tickets/$TicketID" -ContentType $contenttype -Headers $postheaders -Body $jsonBody | Out-Null
@@ -202,18 +208,26 @@ do {
                     # Say something
                     $voice.speak("Location Updated to $NewTranslate") |Out-Null
                 }
-            }if ($ChangeStatusTrans.ContainsKey($NewLocation)) {
-                #converts back to json then pushes that date change to the API using the sort order field
+            }else {
+                $NotLocation = 1
+            }
+            #checks if user input is a status code start the block to change the status
+            #first block if for barcode
+            if ($ChangeStatusTrans.ContainsKey($NewLocation)) {
+                #This block will push to API changing ticket updating the status
+                #converts var back to json to push to API
                 $Statustranslated = $ChangeStatusTrans.$NewLocation
                 $Body = @{"status" = "$Statustranslated"}
                 $jsonBody = $body | ConvertTo-Json
                 Invoke-RestMethod -Method PUT -Uri "https://$SubDom.repairshopr.com/api/v1/tickets/$TicketID" -ContentType $contenttype -Headers $postheaders -Body $jsonBody | Out-Null
-                Write-Output "Ticket Has been Moved To Status $Statustranslated"
+                Write-Output "Ticket Status Changed $Statustranslated"
                 Write-Output $Spacer
                 # Say something
                 $voice.speak("Status Updated to $Statustranslated") |Out-Null
+            #second block is for typing
             }if ($NewLocation -in $ChangeStatusWord) {
-                #converts back to json then pushes that date change to the API using the sort order field
+                #This block will push to API changing ticket updating the location
+                #converts var back to json to push to API
                 $Body = @{"status" = "$NewLocation"}
                 $jsonBody = $body | ConvertTo-Json
                 Invoke-RestMethod -Method PUT -Uri "https://$SubDom.repairshopr.com/api/v1/tickets/$TicketID" -ContentType $contenttype -Headers $postheaders -Body $jsonBody | Out-Null
@@ -222,21 +236,22 @@ do {
                 # Say something
                 $voice.speak("Status Updated to $NewLocation") |Out-Null
             }
-            
-            
-            else {
-                $voice.speak("Location not found") |Out-Null
-                 Write-Output $Spacer
-                Write-Output "Location not found!"
+            #if the user input is not found in locations or status, let user know
+            if (-not $ChangeStatusTrans.ContainsKey($Newlocation) -and $NewLocation -notin $ChangeStatusWord -and $NotLocation -eq 1) {
+                $voice.speak("Input not found") |Out-Null
                 Write-Output $Spacer
+                Write-Output "Location or status not found!"
+                Write-Output $Spacer
+                $NotLocation = 0
             }
 
-            #this is were the ticket number fails at
+            #If API response no tickets let user know
         }elseif ($Response.tickets.Count -eq 0 -and $Continue -notin $IgnoredInputs) {
             Write-Output $Spacer
             Write-Host "Ticket not found"
             $voice.speak("Ticket not found") |Out-Null
             Write-Output $Spacer
+           
         }
         #had issues with wifi sometimes on our "location" device. in order to resolve that issue and it using the last scanned ticket not the new scanned ticket. 
         $Properties = ""
