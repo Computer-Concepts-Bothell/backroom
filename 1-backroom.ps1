@@ -1,7 +1,7 @@
 #Feb2023 -- Dakotam@conceptsnet.com
 #Auto Updater Script
 #remotescript is linked to the github i use for this tool, if you are using a different branch or git, update this to yours. 
-$ToolLink = "https://raw.githubusercontent.com/Pixelbays/backroom/main/backroom.ps1"
+$ToolLink = "https://raw.githubusercontent.com/Pixelbays/backroom/main/1-backroom.ps1"
 #this is 'tool' name. mostly used in changing the file name in the update part
 $ToolName = "1-Backroom"
 #Auto Updater Script
